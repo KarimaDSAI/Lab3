@@ -10,7 +10,7 @@ def sum_in_thread(index: int,
                   end: int,
                   results: list[int]) -> None:
     """
-    sum_in_thread function for calculating partial sums in a thread.
+    sum_in_thread function for calculating partial sums in a thread. Computes the sum of numbers in a specific range & stores it in a shared list at position index.
 
     Args:
         index (int): The index in the results list.
@@ -34,8 +34,8 @@ def threaded_sum(n: int,
         tuple[int, float]: The total sum and the execution time in seconds.
     """
     threads = []
-    results = [0] * num_threads
-    step = n // num_threads
+    results = [0] * num_threads 
+    step = n // num_threads         # divides numbers into equal parts
 
     start_time = time.time()
 
