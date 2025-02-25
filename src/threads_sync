@@ -1,0 +1,69 @@
+# src/threads.py
+
+import threading
+import time
+from src.functions import sum_numbers
+
+
+def sum_in_thread(index: int,
+                  start: int,
+                  end: int,
+                  results: list[int],
+                  barrier: threading.Barrier) -> None:
+    """
+    sum_in_thread function for calculating partial sums in a thread.
+
+    Args:
+        index (int): The index in the results list.
+        start (int): The start of the range.
+        end (int): The end of the range.
+        results (list[int]): Shared list to store partial sums.
+        barrier (threading.Barrier): Barrier to control execution.
+    """
+    results[index] = sum_numbers(start, end)
+    
+    # Wait for other threads before proceeding
+    barrier.wait()
+
+
+def threaded_sum_with_barrier(n: int,
+                              num_threads: int = 4,
+                              max_concurrent_threads: int = 6) -> tuple[int, float]:
+    """
+    Calculate the sum of numbers from 1 to n using multiple threads,
+    ensuring that at most 'max_concurrent_threads' threads run simultaneously.
+
+    Args:
+        n (int): The upper limit of the range (starting from 1).
+        num_threads (int, optional): The total number of threads to use. Defaults to 4.
+        max_concurrent_threads (int, optional): The maximum number of threads running at a time. Defaults to 6.
+
+    Returns:
+        tuple[int, float]: The total sum and the execution time in seconds.
+    """
+    threads = []
+    results = [0] * num_threads
+    step = n // num_threads
+
+    # Create a barrier for thread synchronization
+    barrier = threading.Barrier(min(max_concurrent_threads, num_threads))
+
+    start_time = time.time()
+
+    for i in range(num_threads):
+        start = i * step
+        end = (i + 1) * step if i != num_threads - 1 else n + 1   
+
+        thread = threading.Thread(target=sum_in_thread, args=(i, start, end, results, barrier))
+        threads.append(thread)
+        thread.start()
+
+        # Ensure that only max_concurrent_threads are active at any time
+        if (i + 1) % max_concurrent_threads == 0 or i == num_threads - 1:
+            for t in threads:
+                t.join()
+            threads = []  # Reset thread list for the next batch
+
+    total_sum = sum(results)
+    exec_time = time.time() - start_time
+    return total_sum, exec_time
