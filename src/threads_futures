@@ -1,0 +1,45 @@
+# src/threads.py
+
+import time
+from concurrent.futures import ThreadPoolExecutor
+from src.functions import sum_numbers
+
+
+def sum_in_thread(args: tuple[int, int]) -> int:
+    """
+    Function to compute the sum of a range of numbers.
+
+    Args:
+        args (tuple[int, int]): A tuple containing (start, end).
+
+    Returns:
+        int: The computed sum of the given range.
+    """
+    start, end = args
+    return sum_numbers(start, end)
+
+
+def threaded_sum_with_future(n: int, num_threads: int = 4, max_concurrent_threads: int = 6) -> tuple[int, float]:
+    """
+    Calculate the sum of numbers from 1 to n using multiple threads,
+    ensuring that at most `max_concurrent_threads` threads run simultaneously.
+
+    Args:
+        n (int): The upper limit of the range (starting from 1).
+        num_threads (int, optional): The total number of threads to use. Defaults to 4.
+        max_concurrent_threads (int, optional): The maximum number of threads running at a time. Defaults to 6.
+
+    Returns:
+        tuple[int, float]: The total sum and the execution time in seconds.
+    """
+    step = n // num_threads
+    ranges = [(i * step, (i + 1) * step if i != num_threads - 1 else n + 1) for i in range(num_threads)]
+
+    start_time = time.time()
+
+    with ThreadPoolExecutor(max_workers=max_concurrent_threads) as executor:
+        results = executor.map(sum_in_thread, ranges)
+
+    total_sum = sum(results)
+    exec_time = time.time() - start_time
+    return total_sum, exec_time
