@@ -1,0 +1,47 @@
+import multiprocessing
+import time
+from src.functions import sum_numbers
+
+def sum_in_process(args):
+    """
+    Function for multiprocessing that calculates a partial sum.
+    
+    Args:
+        args (tuple[int, int]): A tuple containing start and end of the range.
+        
+    Returns:
+        int: The computed sum of the given range.
+    """
+    start, end = args
+    return sum_numbers(start, end)
+
+
+def multiprocess_sum_pool(n: int,
+                          num_processes: int = 4) -> tuple[int, float]:
+    """
+    Calculate the sum of numbers from 1 to n using multiple processes with Pool.
+    
+    Args:
+        n (int): The upper limit of the range (starting from 1).
+        num_processes (int, optional): The number of processes to use. Defaults to 4.
+    
+    Returns:
+        tuple[int, float]: The total sum and the execution time in seconds.
+    """
+    step = n // num_processes
+    ranges = [(i * step, (i + 1) * step) for i in range(num_processes)]
+    ranges[-1] = (ranges[-1][0], n + 1)  # Ensure last chunk covers full range
+
+    start_time = time.time()
+
+    # with multiprocessing.Pool(processes=num_processes) as pool:
+    #     results = list(pool.map(sum_in_process, ranges))
+        
+    with multiprocessing.Pool(processes=num_processes) as pool:
+            async_result = pool.map_async(sum_in_process, ranges)
+            results = async_result.get()  # Waits for all tasks to complete and retrieves results
+
+
+    total_sum = sum(results)
+    exec_time = time.time() - start_time
+    return total_sum, exec_time
